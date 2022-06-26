@@ -15,6 +15,7 @@ httpServer.listen(HTTP_PORT);
 const wsServer = new WebSocketServer({ port: 8080 });
 
 wsServer.on('connection', ws => {
+  // eslint-disable-next-line no-useless-concat
   ws.send(`Connection_ready!`);
 
   ws.on('message', data => {
