@@ -1,41 +1,32 @@
-// import Jimp from 'jimp';
-// import robot from 'robotjs';
-import { WebSocketServer } from 'ws';
-// import { Duplex } from 'stream';
+import { WebSocketServer, createWebSocketStream } from 'ws';
 import { httpServer } from './httpServer/httpServer';
 import { controller } from './controller';
-// import { createWebSocketStream } from 'ws';
+
 
 const HTTP_PORT = 3000;
 
 console.log(`Start static http server on the ${HTTP_PORT} port!`);
 httpServer.listen(HTTP_PORT);
 
-
 const wsServer = new WebSocketServer({ port: 8080 });
 
 wsServer.on('connection', ws => {
-  // eslint-disable-next-line no-useless-concat
-  ws.send(`Connection_ready!`);
+  const wsStream = createWebSocketStream(ws, { encoding: 'utf-8', decodeStrings: false });
 
-  ws.on('message', data => {
-    controller(data, ws);
-    ws.send(`Recieve:${data}`);
+  wsStream.write('Connection_ready!', (e) => {
+    if (e) console.error(e);
   });
 
-  ws.on('close', () => {
-    ws.send(`Connection_closed!`);
-  })
+  wsStream.on('data', (chunk: Buffer) => {
+    const data = chunk.toString();
+    if ((data !== 'mouse_position') && (data !== 'prnt_scrn')) {
+      wsStream.write(`${data}`, (e) => {
+        if (e) console.error(e);
+      });
+    }
+    controller(data, wsStream);
+  });
 });
-
-// const ws = new WebSocket({ port: 8080 });
-
-// const duplex: Duplex = createWebSocketStream(ws, { encoding: 'utf8' });
-// duplex.write('mouse_position 444,333\0', (e) => {
-//   if (e) {
-//     console.log(e);
-//   }
-// }); 
 
 process.on('SIGINT', () => {
   process.stdout.write('Closing webSocketServer\n');

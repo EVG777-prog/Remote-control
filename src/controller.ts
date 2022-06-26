@@ -1,13 +1,13 @@
 import robot from 'robotjs';
-import WebSocket from 'ws';
+import { Duplex } from 'stream';
 import { getScreenShot } from './getScreenShot';
 import { drawSquare } from './drawSquare';
 import { drawCircle } from './drawCircle';
 import { drawRectangle } from './drawRectangle';
 
-export function controller(data: WebSocket.RawData, ws: WebSocket.WebSocket): void {
-  console.log(String(data));
-  const [command, ... args] = String(data).split(' '); 
+export function controller(data: string, ws: Duplex): void {
+  console.log(data);
+  const [command, ... args] = data.split(' '); 
   switch (command) {
     case 'mouse_right':
       moveCursorRight(+args[0]);
@@ -66,8 +66,10 @@ function moveCursorUp(distance: number) {
   robot.moveMouse(mouse.x, mouse.y - distance);
 }
 
-function sendMousePosition(ws: WebSocket.WebSocket) {
+function sendMousePosition(wsStream: Duplex) {
   const mouse = robot.getMousePos();
   console.log(`Send mouse position success`);
-  ws.send(`mouse_position ${mouse.x},${mouse.y}`);
+  wsStream.write(`mouse_position ${mouse.x},${mouse.y}`, (e) => {
+    if (e) console.error(e);
+  });
 }

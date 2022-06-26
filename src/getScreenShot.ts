@@ -1,10 +1,9 @@
-import WebSocket from 'ws';
 import robot from 'robotjs';
 import Jimp from 'jimp';
+import { Duplex } from 'stream';
 
-export async function getScreenShot(ws: WebSocket.WebSocket) {
+export async function getScreenShot(wsStream: Duplex) {
   const mouse = robot.getMousePos();
-  console.log(mouse.x, mouse.y);
   const size = 200;
   const imgBitmap = robot.screen.capture(mouse.x, mouse.y, size, size);
   const image = new Jimp(imgBitmap.width, imgBitmap.height);
@@ -18,7 +17,9 @@ export async function getScreenShot(ws: WebSocket.WebSocket) {
 
   const imgBase64 = await image.getBase64Async(Jimp.MIME_PNG);
   const result = imgBase64.split(',')[1];
-  ws.send(`prnt_scrn ${result}`);
+  wsStream.write(`prnt_scrn ${result}`, (e) => {
+    if (e) console.error(e);
+  });
 
   console.log(`Make Screenshot success`);
 }
