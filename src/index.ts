@@ -1,8 +1,10 @@
 // import Jimp from 'jimp';
 // import robot from 'robotjs';
 import { WebSocketServer } from 'ws';
+// import { Duplex } from 'stream';
 import { httpServer } from './httpServer/httpServer';
 import { controller } from './controller';
+// import { createWebSocketStream } from 'ws';
 
 const HTTP_PORT = 3000;
 
@@ -25,7 +27,18 @@ wsServer.on('connection', ws => {
   })
 });
 
-wsServer.on('close', () => {
-  console.log('Close WSS!');
+// const ws = new WebSocket({ port: 8080 });
+
+// const duplex: Duplex = createWebSocketStream(ws, { encoding: 'utf8' });
+// duplex.write('mouse_position 444,333\0', (e) => {
+//   if (e) {
+//     console.log(e);
+//   }
+// }); 
+
+process.on('SIGINT', () => {
+  process.stdout.write('Closing webSocketServer\n');
+  wsServer.close();
+  process.exit();
 });
 
